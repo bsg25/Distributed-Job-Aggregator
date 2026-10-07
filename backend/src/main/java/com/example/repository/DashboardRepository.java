@@ -23,16 +23,7 @@ public class DashboardRepository {
                 JOIN dist_jobs_scheduler.watched_companies w ON w.company_name = f.ats
                 JOIN dist_jobs_scheduler.users u ON u.id = w.user_id
                 WHERE u.username = ?
-                ORDER BY
-                    CASE
-                        WHEN f.title ~* '\\b(senior|sr|staff|principal|lead|manager|director|vp|head|chief|distinguished|architect|fellow)\\b'
-                            THEN 2
-                        WHEN f.title ~* '\\b(junior|jr|entry|associate|new[ -]?grad|graduate|early career|apprentice)\\b'
-                          OR f.title ~* '(software engineer|swe)[^a-z0-9]+(i{1,3}|[1-3])\\b'
-                            THEN 0
-                        ELSE 1
-                    END,
-                    f.firstSeen DESC
+                ORDER BY f.firstSeen DESC
                 """,
                 this::mapRow,
                 username
