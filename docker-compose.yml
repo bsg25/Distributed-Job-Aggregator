@@ -20,26 +20,30 @@ services:
         limits:
           memory: 128m
 
-  cockroachdb:
-    image: cockroachdb/cockroach:latest
-    command: start-single-node --insecure --cache=256MiB --max-sql-memory=256MiB
+  postgres:
+    image: postgres:17-alpine
     restart: unless-stopped
     oom_score_adj: -600
+    environment:
+      POSTGRES_DB: dist_jobs_scheduler
+      POSTGRES_USER: ${DB_USER:-jobs}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-jobs}
     ports:
-      - "127.0.0.1:26257:26257"
-      - "127.0.0.1:8081:8080"
+      - "127.0.0.1:5432:5432"
     volumes:
-      - cockroach-data:/cockroach/cockroach-data
+      - postgres-data:/var/lib/postgresql/data
       - ./schema/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
-      test: ["CMD", "cockroach", "sql", "--insecure", "-e", "SELECT 1"]
+      # -h forces TCP, so this only passes once the real server is up (not the
+      # temporary socket-only one the image runs while applying schema.sql)
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d dist_jobs_scheduler"]
       interval: 10s
       timeout: 5s
       retries: 5
     deploy:
       resources:
         limits:
-          memory: 1200m
+          memory: 512m
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -61,13 +65,15 @@ services:
     restart: unless-stopped
     oom_score_adj: 200
     environment:
-      DB_HOST: cockroachdb
+      DB_HOST: postgres
+      DB_USER: ${DB_USER:-jobs}
+      DB_PASSWORD: ${DB_PASSWORD:-jobs}
       RABBITMQ_HOST: rabbitmq
       APP_JWT_SECRET: ${APP_JWT_SECRET}
       APP_ALLOWED_ORIGIN: ${APP_ALLOWED_ORIGIN}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0
     depends_on:
-      cockroachdb:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -91,12 +97,14 @@ services:
     restart: unless-stopped
     oom_score_adj: 200
     environment:
-      DB_HOST: cockroachdb
+      DB_HOST: postgres
+      DB_USER: ${DB_USER:-jobs}
+      DB_PASSWORD: ${DB_PASSWORD:-jobs}
       RABBITMQ_HOST: rabbitmq
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0
       POLL_MINUTES: ${POLL_MINUTES:-30}
     depends_on:
-      cockroachdb:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -110,11 +118,13 @@ services:
     restart: unless-stopped
     oom_score_adj: 200
     environment:
-      DB_HOST: cockroachdb
+      DB_HOST: postgres
+      DB_USER: ${DB_USER:-jobs}
+      DB_PASSWORD: ${DB_PASSWORD:-jobs}
       RABBITMQ_HOST: rabbitmq
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=75.0
     depends_on:
-      cockroachdb:
+      postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -125,6 +135,6 @@ services:
           memory: 400m
 
 volumes:
-  cockroach-data:
+  postgres-data:
   caddy-data:
   caddy-config:
