@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS dist_jobs_scheduler;
+CREATE SCHEMA IF NOT EXISTS dist_jobs_scheduler;
 
 CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.users(
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -29,3 +29,6 @@ CREATE TABLE IF NOT EXISTS dist_jobs_scheduler.watched_companies(
     company_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (company_name, user_id)
 );
+
+CREATE INDEX IF NOT EXISTS watched_companies_user_id_idx
+    ON dist_jobs_scheduler.watched_companies (user_id);
