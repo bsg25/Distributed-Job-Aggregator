@@ -34,8 +34,6 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./schema/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     healthcheck:
-      # -h forces TCP, so this only passes once the real server is up (not the
-      # temporary socket-only one the image runs while applying schema.sql)
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d dist_jobs_scheduler"]
       interval: 10s
       timeout: 5s
