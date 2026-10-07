@@ -31,7 +31,7 @@ minutes; failures are isolated per board, so one dead slug never stops a run.
 |---|---|
 | Services | Spring Boot (`backend`, `poller`, `worker`) |
 | Messaging | RabbitMQ (competing consumers via Spring AMQP) |
-| Database | CockroachDB (Postgres wire-compatible), Spring JDBC |
+| Database | PostgreSQL |
 | Live updates | STOMP over WebSockets (per-user queues via `SimpMessagingTemplate`) |
 | Frontend | React 19, Vite |
 
