@@ -1,5 +1,6 @@
 package com.example.service;
 
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -16,10 +17,13 @@ import java.util.Date;
 public class JwtService {
 
     private final SecretKey key;
+    private final JwtParser parser;
     private final Duration ttl = Duration.ofHours(12);
 
     public JwtService(@Value("${app.jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        // Immutable and thread-safe, so build it once instead of on every request.
+        this.parser = Jwts.parser().verifyWith(key).build();
     }
 
     // Generate token
@@ -30,6 +34,6 @@ public class JwtService {
 
     // Verify and return token 
     public String verifyAndGetUsername(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload().getSubject();
+        return parser.parseSignedClaims(token).getPayload().getSubject();
     }
 }
