@@ -22,7 +22,6 @@ public class JwtService {
 
     public JwtService(@Value("${app.jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        // Immutable and thread-safe, so build it once instead of on every request.
         this.parser = Jwts.parser().verifyWith(key).build();
     }
 
